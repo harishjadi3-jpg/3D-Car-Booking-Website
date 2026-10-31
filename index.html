@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>DropMe — Drive the Night</title>
+  <meta name="description" content="DropMe — Premium electric car rental service. A blackout city, silent dispatch, pure light.">
+
+  <!-- Google Fonts: Archivo (expanded width 125%), Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,300..400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="loading">
+
+  <!-- Film Grain Overlay (offscreen generated tile, shifted randomly via JS) -->
+  <canvas id="grain-canvas" class="grain-overlay" aria-hidden="true"></canvas>
+
+  <!-- Custom Cursor ("The Headlight" - desktop fine pointer only) -->
+  <div id="cursor" class="cursor" aria-hidden="true">
+    <div class="cursor-ring"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-bar"></div>
+    <span class="cursor-label">VIEW</span>
+  </div>
+
+  <!-- Preloader Screen -->
+  <aside id="preloader" class="preloader" aria-label="Loading DropMe" aria-live="polite">
+    <div class="preloader-content">
+      <div class="preloader-wordmark">DropMe</div>
+      <div class="preloader-meter">
+        <div class="preloader-track">
+          <div id="preloader-bar" class="preloader-bar"></div>
+        </div>
+        <div id="preloader-counter" class="preloader-counter">000</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Global Navigation (transparent, mix-blend-mode: difference) -->
+  <header id="site-nav" class="nav">
+    <div class="nav-container">
+      <a href="#hero" class="nav-brand" aria-label="DropMe Home" data-cursor="VIEW">DropMe</a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#how-it-works" class="nav-link" data-cursor="VIEW">HOW IT WORKS</a>
+        <a href="#safety" class="nav-link" data-cursor="VIEW">SAFETY</a>
+        <a href="#fleet" class="nav-link" data-cursor="VIEW">FLEET</a>
+        <a href="#book" class="nav-link nav-link--primary" data-cursor="BOOK">BOOK</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+
+    <!-- ============================================================
+         SECTION 1: HERO (Pinned Scrollytelling, ~600vh)
+         ============================================================ -->
+    <section id="hero" class="pinned-section hero-wrapper" aria-label="Hero Introduction">
+      <div class="pinned-stage hero-stage">
+        <!-- Canvas for scroll-scrubbed hero frame sequence -->
+        <canvas id="hero-canvas" class="scrolly-canvas"></canvas>
+
+        <!-- Canvas fade overlay for last 5% transition into darkness -->
+        <div id="hero-fade-overlay" class="fade-to-black" aria-hidden="true"></div>
+
+        <!-- Left-edge HUD (mono chapter tick & telemetry) -->
+        <div class="hero-hud" aria-hidden="true">
+          <div class="hud-item hud-chapter">
+            <span class="hud-tick"></span>
+            <span id="hud-chapter-text">01/04</span>
+          </div>
+          <div class="hud-item hud-telemetry">
+            <div class="hud-metric">
+              <span class="hud-label">SPEED</span>
+              <span id="hud-speed" class="hud-val">000 KM/H</span>
+            </div>
+            <div class="hud-metric">
+              <span class="hud-label">DIST</span>
+              <span id="hud-dist" class="hud-val">0.0 KM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Chapters Overlay (placed in sky/empty space, never over car) -->
+        <div class="hero-chapters">
+          <!-- Chapter 1: 0 - 14% -->
+          <article id="hero-ch-1" class="hero-chapter active" data-chapter="1">
+            <h1 class="hero-title reveal-line">
+              <span class="line-mask"><span class="line-inner">DropMe</span></span>
+            </h1>
+            <p class="hero-sub reveal-line">
+              <span class="line-mask"><span class="line-inner">The city is asleep.</span></span>
+            </p>
+            <div class="hero-hint">
+              <span class="hint-text">SCROLL TO WAKE IT</span>
+              <span class="hint-line"></span>
+            </div>
+          </article>
+
+          <!-- Chapter 2: 22 - 40% -->
+          <article id="hero-ch-2" class="hero-chapter" data-chapter="2">
+            <h2 class="hero-heading reveal-line">
+              <span class="line-mask"><span class="line-inner">Where do you</span></span>
+              <span class="line-mask"><span class="line-inner">need to be?</span></span>
+            </h2>
+            <p class="hero-sub reveal-line">
+              <span class="line-mask"><span class="line-inner">Silent dispatch across the blackout grid.</span></span>
+            </p>
+          </article>
+
+          <!-- Chapter 3: 50 - 68% -->
+          <article id="hero-ch-3" class="hero-chapter" data-chapter="3">
+            <h2 class="hero-heading reveal-line">
+              <span class="line-mask"><span class="line-inner">We bring the car.</span></span>
+              <span class="line-mask"><span class="line-inner">And the light.</span></span>
+            </h2>
+            <p class="hero-sub reveal-line">
+              <span class="line-mask"><span class="line-inner">A single beacon cutting through the dark.</span></span>
+            </p>
+          </article>
+
+          <!-- Chapter 4: 80 - 100% -->
+          <article id="hero-ch-4" class="hero-chapter" data-chapter="4">
+            <div class="hero-heading-badge">HERO MODEL</div>
+            <h2 class="hero-title reveal-line">
+              <span class="line-mask"><span class="line-inner">GT-E</span></span>
+            </h2>
+            <p class="hero-meta mono-text">AVAILABLE NOW · FROM ₹ 28 / KM · 4 SEATS</p>
+            <div class="hero-actions">
+              <a href="#book" class="action-link action-link--primary" data-car="gt-e" data-cursor="BOOK">Book this ride</a>
+              <a href="#fleet" class="action-link" data-cursor="VIEW">See the fleet</a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Section 1px xenon progress line -->
+        <div id="hero-progress-line" class="section-progress-line"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: HOW IT WORKS (~160vh, Not Pinned)
+         ============================================================ -->
+    <section id="how-it-works" class="section-how" aria-label="How It Works">
+      <div class="how-container">
+        <header class="section-header">
+          <span class="mono-label">02 — HOW IT WORKS</span>
+          <h2 id="how-sentence" class="how-sentence display-font">
+            Tell us where. The night does the rest.
+          </h2>
+        </header>
+
+        <div class="how-grid">
+          <div class="how-col">
+            <div class="how-num">01</div>
+            <h3 class="how-title">CHOOSE YOUR ROUTE</h3>
+            <p class="how-desc">Pickup, drop-off, date and time.</p>
+          </div>
+          <div class="how-col">
+            <div class="how-num">02</div>
+            <h3 class="how-title">PICK YOUR CAR</h3>
+            <p class="how-desc">Five cars, one standard of care.</p>
+          </div>
+          <div class="how-col">
+            <div class="how-num">03</div>
+            <h3 class="how-title">RIDE</h3>
+            <p class="how-desc">Your car arrives with the lights on.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: SAFETY (Pinned Scrollytelling, ~400vh)
+         ============================================================ -->
+    <section id="safety" class="pinned-section safety-wrapper" aria-label="Safety Architecture">
+      <div class="pinned-stage safety-stage">
+        <!-- Canvas for scroll-scrubbed safety frame sequence -->
+        <canvas id="safety-canvas" class="scrolly-canvas"></canvas>
+
+        <!-- Persistent Top-Left Safety Title & Facts Header -->
+        <div class="safety-header">
+          <span class="mono-label">03 — SAFETY</span>
+          <h2 class="safety-title display-font">Ride protected.</h2>
+          <p class="safety-facts mono-text">5-STAR TARGET · 24/7 ROADSIDE SUPPORT · LIVE TRIP SHARING</p>
+        </div>
+
+        <!-- Safety Chapters Overlay (Solid -> Structure -> Awareness) -->
+        <div class="safety-chapters">
+          <!-- Chapter 1: 0 - 30% -->
+          <article id="safety-ch-1" class="safety-chapter active" data-safety-chapter="1">
+            <div class="safety-chapter-step">01</div>
+            <h3 class="safety-chapter-title">SOLID</h3>
+            <p class="safety-chapter-body">Every DropMe is inspected, cleaned and checked before every ride.</p>
+          </article>
+
+          <!-- Chapter 2: 35 - 65% -->
+          <article id="safety-ch-2" class="safety-chapter" data-safety-chapter="2">
+            <div class="safety-chapter-step">02</div>
+            <h3 class="safety-chapter-title">STRUCTURE</h3>
+            <p class="safety-chapter-body">A high-strength safety cage, crumple zones and a sealed battery frame.</p>
+          </article>
+
+          <!-- Chapter 3: 70 - 100% -->
+          <article id="safety-ch-3" class="safety-chapter" data-safety-chapter="3">
+            <div class="safety-chapter-step">03</div>
+            <h3 class="safety-chapter-title">AWARENESS</h3>
+            <p class="safety-chapter-body">360° sensors watch the road so the driver doesn't have to guess.</p>
+          </article>
+        </div>
+
+        <!-- Safety Callouts Container (fades in > 40% progress) -->
+        <div id="safety-callouts" class="safety-callouts" aria-hidden="true">
+          <!-- Callout 1: CAGE -->
+          <div id="callout-cage" class="callout-item" data-callout="cage">
+            <div class="callout-dot"></div>
+            <div class="callout-line"></div>
+            <div class="callout-card">
+              <span class="callout-label">CAGE</span>
+              <span class="callout-desc">Ultra-high-strength steel safety cage</span>
+            </div>
+          </div>
+
+          <!-- Callout 2: AIRBAGS -->
+          <div id="callout-airbags" class="callout-item" data-callout="airbags">
+            <div class="callout-dot"></div>
+            <div class="callout-line"></div>
+            <div class="callout-card">
+              <span class="callout-label">AIRBAGS</span>
+              <span class="callout-desc">Nine airbags, front, side, curtain, knee</span>
+            </div>
+          </div>
+
+          <!-- Callout 3: SENSORS -->
+          <div id="callout-sensors" class="callout-item" data-callout="sensors">
+            <div class="callout-dot"></div>
+            <div class="callout-line"></div>
+            <div class="callout-card">
+              <span class="callout-label">SENSORS</span>
+              <span class="callout-desc">360° radar, camera and lidar</span>
+            </div>
+          </div>
+
+          <!-- Callout 4: BRAKING -->
+          <div id="callout-braking" class="callout-item" data-callout="braking">
+            <div class="callout-dot"></div>
+            <div class="callout-line"></div>
+            <div class="callout-card">
+              <span class="callout-label">BRAKING</span>
+              <span class="callout-desc">Automatic emergency braking</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1px xenon progress line -->
+        <div id="safety-progress-line" class="section-progress-line"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: FLEET (Hover Accordion, 100vh)
+         ============================================================ -->
+    <section id="fleet" class="section-fleet" aria-label="Fleet Catalog">
+      <header class="fleet-header">
+        <span class="mono-label">04 — THE FLEET</span>
+        <h2 class="fleet-title display-font">Five ways to ride the night.</h2>
+      </header>
+
+      <div class="fleet-accordion" role="region" aria-label="Fleet models accordion">
+        <!-- Slide 01: GT-E -->
+        <div class="fleet-slide is-open" data-car="gt-e" role="button" aria-expanded="true" tabindex="0">
+          <!-- Closed view indicators -->
+          <div class="slide-closed-view">
+            <span class="slide-num">01</span>
+            <span class="slide-name-rotated">GT-E</span>
+          </div>
+
+          <!-- Background / Car visual -->
+          <div class="slide-visual">
+            <img src="assets/cars/gt-e.webp" alt="DropMe GT-E matte graphite grand tourer coupe" class="slide-car-img" loading="lazy">
+          </div>
+
+          <!-- Open view details -->
+          <div class="slide-open-view">
+            <div class="slide-open-header">
+              <span class="slide-open-num mono-text">01</span>
+              <h3 class="slide-model-name display-font">GT-E</h3>
+            </div>
+            <div class="slide-open-meta">
+              <p class="slide-tagline">The grand tourer.</p>
+              <div class="slide-specs mono-text">
+                <div class="spec-cell">
+                  <span class="spec-k">SEATS</span>
+                  <span class="spec-v">4</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RANGE</span>
+                  <span class="spec-v">640 km</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RATE</span>
+                  <span class="spec-v">₹ 28 / km</span>
+                </div>
+              </div>
+              <div class="slide-swatches" aria-label="Available finish swatches">
+                <span class="swatch is-active" style="background:#1e2229;" title="Matte Graphite"></span>
+                <span class="swatch" style="background:#eceae4;" title="Bone White"></span>
+                <span class="swatch" style="background:#090a0d;" title="Obsidian Black"></span>
+                <span class="swatch" style="background:#3f444e;" title="Starlight Grey"></span>
+              </div>
+              <a href="#book" class="fleet-book-link" data-car="gt-e" data-cursor="BOOK">Book this car &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 02: S -->
+        <div class="fleet-slide" data-car="s" role="button" aria-expanded="false" tabindex="0">
+          <div class="slide-closed-view">
+            <span class="slide-num">02</span>
+            <span class="slide-name-rotated">S</span>
+          </div>
+          <div class="slide-visual">
+            <img src="assets/cars/s.webp" alt="DropMe S satin bone white sport sedan" class="slide-car-img" loading="lazy">
+          </div>
+          <div class="slide-open-view">
+            <div class="slide-open-header">
+              <span class="slide-open-num mono-text">02</span>
+              <h3 class="slide-model-name display-font">S</h3>
+            </div>
+            <div class="slide-open-meta">
+              <p class="slide-tagline">Four doors, no compromise.</p>
+              <div class="slide-specs mono-text">
+                <div class="spec-cell">
+                  <span class="spec-k">SEATS</span>
+                  <span class="spec-v">5</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RANGE</span>
+                  <span class="spec-v">600 km</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RATE</span>
+                  <span class="spec-v">₹ 24 / km</span>
+                </div>
+              </div>
+              <div class="slide-swatches" aria-label="Available finish swatches">
+                <span class="swatch is-active" style="background:#eceae4;" title="Satin Bone White"></span>
+                <span class="swatch" style="background:#090a0d;" title="Deep Noir"></span>
+                <span class="swatch" style="background:#1c2838;" title="Navy Azure"></span>
+                <span class="swatch" style="background:#42454e;" title="Basalt"></span>
+              </div>
+              <a href="#book" class="fleet-book-link" data-car="s" data-cursor="BOOK">Book this car &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 03: X -->
+        <div class="fleet-slide" data-car="x" role="button" aria-expanded="false" tabindex="0">
+          <div class="slide-closed-view">
+            <span class="slide-num">03</span>
+            <span class="slide-name-rotated">X</span>
+          </div>
+          <div class="slide-visual">
+            <img src="assets/cars/x.webp" alt="DropMe X midnight blue SUV coupe" class="slide-car-img" loading="lazy">
+          </div>
+          <div class="slide-open-view">
+            <div class="slide-open-header">
+              <span class="slide-open-num mono-text">03</span>
+              <h3 class="slide-model-name display-font">X</h3>
+            </div>
+            <div class="slide-open-meta">
+              <p class="slide-tagline">Higher, never heavier.</p>
+              <div class="slide-specs mono-text">
+                <div class="spec-cell">
+                  <span class="spec-k">SEATS</span>
+                  <span class="spec-v">5</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RANGE</span>
+                  <span class="spec-v">560 km</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RATE</span>
+                  <span class="spec-v">₹ 26 / km</span>
+                </div>
+              </div>
+              <div class="slide-swatches" aria-label="Available finish swatches">
+                <span class="swatch is-active" style="background:#14223d;" title="Midnight Blue"></span>
+                <span class="swatch" style="background:#090a0d;" title="Obsidian"></span>
+                <span class="swatch" style="background:#eceae4;" title="Bone White"></span>
+                <span class="swatch" style="background:#2d333b;" title="Graphite Slate"></span>
+              </div>
+              <a href="#book" class="fleet-book-link" data-car="x" data-cursor="BOOK">Book this car &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 04: R -->
+        <div class="fleet-slide" data-car="r" role="button" aria-expanded="false" tabindex="0">
+          <div class="slide-closed-view">
+            <span class="slide-num">04</span>
+            <span class="slide-name-rotated">R</span>
+          </div>
+          <div class="slide-visual">
+            <img src="assets/cars/r.webp" alt="DropMe R track coupe with rear wing" class="slide-car-img" loading="lazy">
+          </div>
+          <div class="slide-open-view">
+            <div class="slide-open-header">
+              <span class="slide-open-num mono-text">04</span>
+              <h3 class="slide-model-name display-font">R</h3>
+            </div>
+            <div class="slide-open-meta">
+              <p class="slide-tagline">Built for the track.</p>
+              <div class="slide-specs mono-text">
+                <div class="spec-cell">
+                  <span class="spec-k">SEATS</span>
+                  <span class="spec-v">2</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RANGE</span>
+                  <span class="spec-v">420 km</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RATE</span>
+                  <span class="spec-v">₹ 40 / km</span>
+                </div>
+              </div>
+              <div class="slide-swatches" aria-label="Available finish swatches">
+                <span class="swatch is-active" style="background:#090a0d;" title="Satin Black"></span>
+                <span class="swatch" style="background:#b31e17;" title="Crimson Core"></span>
+                <span class="swatch" style="background:#3a3f47;" title="Anthracite"></span>
+                <span class="swatch" style="background:#eceae4;" title="Bone White"></span>
+              </div>
+              <a href="#book" class="fleet-book-link" data-car="r" data-cursor="BOOK">Book this car &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 05: ONE -->
+        <div class="fleet-slide" data-car="one" role="button" aria-expanded="false" tabindex="0">
+          <div class="slide-closed-view">
+            <span class="slide-num">05</span>
+            <span class="slide-name-rotated">ONE</span>
+          </div>
+          <div class="slide-visual">
+            <img src="assets/cars/one.webp" alt="DropMe ONE concept hypercar liquid silver" class="slide-car-img" loading="lazy">
+          </div>
+          <div class="slide-open-view">
+            <div class="slide-open-header">
+              <span class="slide-open-num mono-text">05</span>
+              <h3 class="slide-model-name display-font">ONE</h3>
+            </div>
+            <div class="slide-open-meta">
+              <p class="slide-tagline">The future, early.</p>
+              <div class="slide-specs mono-text">
+                <div class="spec-cell">
+                  <span class="spec-k">SEATS</span>
+                  <span class="spec-v">2</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RANGE</span>
+                  <span class="spec-v">450 km</span>
+                </div>
+                <div class="spec-cell">
+                  <span class="spec-k">RATE</span>
+                  <span class="spec-v">₹ 65 / km</span>
+                </div>
+              </div>
+              <div class="slide-swatches" aria-label="Available finish swatches">
+                <span class="swatch is-active" style="background:#c2c7ce;" title="Liquid Silver"></span>
+                <span class="swatch" style="background:#090a0d;" title="Nightfall"></span>
+                <span class="swatch" style="background:#1f2937;" title="Hyper Dark"></span>
+                <span class="swatch" style="background:#e2e8f0;" title="Platinum"></span>
+              </div>
+              <a href="#book" class="fleet-book-link" data-car="one" data-cursor="BOOK">Book this car &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 5: BOOK YOUR RIDE (100vh, Conversion Section)
+         ============================================================ -->
+    <section id="book" class="section-book" aria-label="Book Your Ride">
+      <div class="book-container">
+        <!-- Left Column -->
+        <div class="book-intro">
+          <span class="mono-label">05 — BOOK</span>
+          <h2 class="book-title display-font">Drive the night.</h2>
+          <p class="book-subtitle">Choose where you start and where you end. We handle the rest.</p>
+        </div>
+
+        <!-- Right Column: Form or Confirmation Panel -->
+        <div class="book-workspace">
+          <!-- Active Booking Form -->
+          <form id="booking-form" class="booking-form" novalidate aria-label="Ride booking form">
+            <div class="form-row form-row--duo">
+              <!-- PICKUP -->
+              <div class="form-group">
+                <label for="pickup-input" class="form-label mono-text">PICKUP</label>
+                <input type="text" id="pickup-input" name="pickup" list="cities-list" placeholder="City or terminal" autocomplete="off" required>
+                <div id="error-pickup" class="form-error mono-text" aria-live="polite"></div>
+              </div>
+
+              <!-- DROP-OFF -->
+              <div class="form-group">
+                <label for="dropoff-input" class="form-label mono-text">DROP-OFF</label>
+                <input type="text" id="dropoff-input" name="dropoff" list="cities-list" placeholder="City or destination" autocomplete="off" required>
+                <div id="error-dropoff" class="form-error mono-text" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <!-- Datalist for cities populated from config.js -->
+            <datalist id="cities-list"></datalist>
+
+            <div class="form-row form-row--duo">
+              <!-- DATE -->
+              <div class="form-group">
+                <label for="date-input" class="form-label mono-text">DATE</label>
+                <input type="date" id="date-input" name="date" required>
+                <div id="error-date" class="form-error mono-text" aria-live="polite"></div>
+              </div>
+
+              <!-- TIME -->
+              <div class="form-group">
+                <label for="time-input" class="form-label mono-text">TIME</label>
+                <input type="time" id="time-input" name="time" required>
+                <div id="error-time" class="form-error mono-text" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <div class="form-row form-row--duo">
+              <!-- PASSENGERS -->
+              <div class="form-group">
+                <label for="passengers-select" class="form-label mono-text">PASSENGERS</label>
+                <select id="passengers-select" name="passengers" required>
+                  <option value="1">1 Passenger</option>
+                  <option value="2">2 Passengers</option>
+                  <option value="3">3 Passengers</option>
+                  <option value="4" selected>4 Passengers</option>
+                  <option value="5">5 Passengers</option>
+                </select>
+                <div id="error-passengers" class="form-error mono-text" aria-live="polite"></div>
+              </div>
+
+              <!-- CAR -->
+              <div class="form-group">
+                <label for="car-select" class="form-label mono-text">CAR</label>
+                <select id="car-select" name="car" required>
+                  <option value="gt-e" selected>GT-E (4 seats · ₹ 28/km)</option>
+                  <option value="s">S (5 seats · ₹ 24/km)</option>
+                  <option value="x">X (5 seats · ₹ 26/km)</option>
+                  <option value="r">R (2 seats · ₹ 40/km)</option>
+                  <option value="one">ONE (2 seats · ₹ 65/km)</option>
+                </select>
+                <div id="error-car" class="form-error mono-text" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <!-- Route Graphic & Fare Estimate Block -->
+            <div class="estimate-container">
+              <!-- Route Graphic: 1px SVG Line between 2 dots with traveling red light -->
+              <div id="route-graphic" class="route-graphic" aria-hidden="true">
+                <div class="route-nodes">
+                  <div class="node-item">
+                    <span class="node-dot"></span>
+                    <span id="route-from" class="node-label mono-text">ORIGIN</span>
+                  </div>
+                  <div class="node-item node-item--right">
+                    <span id="route-to" class="node-label mono-text">DESTINATION</span>
+                    <span class="node-dot"></span>
+                  </div>
+                </div>
+                <div class="route-svg-wrap">
+                  <svg class="route-svg" viewBox="0 0 400 12" preserveAspectRatio="none">
+                    <line x1="0" y1="6" x2="400" y2="6" stroke="rgba(237,234,228,0.2)" stroke-width="1" />
+                    <!-- Animated taillight dot -->
+                    <circle id="route-pulse-dot" cx="0" cy="6" r="3" fill="var(--taillight)" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Summary Block (1px hairline box in mono) -->
+              <div class="summary-box mono-text">
+                <div class="summary-col">
+                  <span class="summary-key">DISTANCE</span>
+                  <span id="sum-dist" class="summary-val">—</span>
+                </div>
+                <div class="summary-col">
+                  <span class="summary-key">DURATION</span>
+                  <span id="sum-dur" class="summary-val">—</span>
+                </div>
+                <div class="summary-col">
+                  <span class="summary-key">FARE</span>
+                  <span id="sum-fare" class="summary-val">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Confirmation Action Button -->
+            <div class="form-actions">
+              <button type="submit" id="btn-confirm-booking" class="btn-confirm mono-text" data-cursor="BOOK">
+                <span class="btn-tick" aria-hidden="true"></span>
+                <span class="btn-text">CONFIRM BOOKING</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Flat Confirmation Panel (Hidden initially, swapped on booking submit) -->
+          <div id="booking-confirmation" class="booking-confirmation" hidden>
+            <div class="confirm-badge mono-text">RESERVATION CONFIRMED</div>
+            <h3 class="confirm-id display-font" id="conf-id">NX-000000</h3>
+            <div class="confirm-details mono-text">
+              <div class="confirm-row">
+                <span class="c-k">ROUTE</span>
+                <span class="c-v" id="conf-route">—</span>
+              </div>
+              <div class="confirm-row">
+                <span class="c-k">SCHEDULE</span>
+                <span class="c-v" id="conf-schedule">—</span>
+              </div>
+              <div class="confirm-row">
+                <span class="c-k">VEHICLE</span>
+                <span class="c-v" id="conf-car">—</span>
+              </div>
+              <div class="confirm-row">
+                <span class="c-k">TOTAL FARE</span>
+                <span class="c-v" id="conf-fare">—</span>
+              </div>
+              <div class="confirm-row">
+                <span class="c-k">DISPATCH NOTICE</span>
+                <span class="c-v" id="conf-email-status">Dispatched to harishjadi3@gmail.com</span>
+              </div>
+            </div>
+            <div class="confirm-actions">
+              <button type="button" id="btn-new-booking" class="link-btn mono-text" data-cursor="VIEW">Book another ride &rarr;</button>
+              <a id="conf-mailto-link" href="#" class="link-btn mono-text" data-cursor="VIEW" style="margin-left: 1.5rem;">Send Email Copy &rarr;</a>
+            </div>
+          </div>
+
+          <!-- Existing Saved Bookings List (localStorage) -->
+          <div id="saved-bookings-wrap" class="saved-bookings-wrap" hidden>
+            <h4 class="saved-bookings-title mono-text">YOUR BOOKINGS</h4>
+            <ul id="saved-bookings-list" class="saved-bookings-list mono-text" role="list"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand-col">
+        <a href="#hero" class="footer-brand" data-cursor="VIEW">DropMe</a>
+        <p class="footer-brand-desc">A blackout city. Silent dispatch. Pure light.</p>
+        <p class="footer-copy mono-text">&copy; 2026 DropMe (fictional brand).</p>
+      </div>
+
+      <div class="footer-links-col">
+        <span class="footer-col-title mono-text">EXPERIENCE</span>
+        <ul class="footer-list mono-text">
+          <li><a href="#fleet" data-cursor="VIEW">Fleet</a></li>
+          <li><a href="#safety" data-cursor="VIEW">Safety</a></li>
+          <li><a href="#book" data-cursor="BOOK">Book</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <span class="footer-col-title mono-text">SYSTEM</span>
+        <ul class="footer-list mono-text">
+          <li><a href="#safety" data-cursor="VIEW">Safety Standards</a></li>
+          <li><a href="#how-it-works" data-cursor="VIEW">Support</a></li>
+          <li><a href="#hero" data-cursor="VIEW">Terms of Service</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <span class="footer-col-title mono-text">DISPATCH</span>
+        <ul class="footer-list mono-text">
+          <li><a href="mailto:harishjadi3@gmail.com" data-cursor="VIEW">Contact (harishjadi3@gmail.com)</a></li>
+          <li><a href="#fleet" data-cursor="VIEW">Press</a></li>
+          <li><a href="#hero" data-cursor="VIEW">Careers</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
